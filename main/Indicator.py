@@ -67,10 +67,6 @@ def calcATR (base, periodo, maxAtr):
 
         base.loc[i, 'tr'] = max(tr1, tr2, tr3)
 
-    # print(base['tr'][55])
-    # print(base['tr'].values[55])
-    # print(base.loc[55, 'tr'] )
-
     x = 0
     for i in range(periodo+1, len(base)):
         if i == periodo+1:
@@ -148,12 +144,14 @@ def oper (base):
     return base
 
 def getVarMonthDate (ano,mes,dia, var, days):
-    #OBSERVACAO: DAYS EH UM BOOLEANO, SE DAYS = TRUE, CALCULA A VARIACAO DO DIA AO INVES DO MES, SO FUNCIONA PARA DIA NEGATIVO.
+
     meses_l = [1,3,5,7,8,10,12]
     meses_s = [4,6,9,11]
     if days:
+        #CALCULATES DELTA IN DAYS
         data = date(ano, mes, dia) + relativedelta(days=+var)
     else:
+        #CALCULATES DELTA IN MONTHS
         data = date(ano, mes, dia) + relativedelta(months=+var)
 
         data_check = getDateFormat(data,2,2)
@@ -216,12 +214,11 @@ def volatilidade(ativos, periodos, dados_loc,data):
         try:
             base = base[index - periodos + 1:index + 1]
         except:
-            a=0
-            # print('ALGO DE ERRADO NAO ESTA CERTO')
+            _ = ""
         base = base.reset_index(drop=True)
 
         volx = base.std(axis = 0, skipna = True)
-        volx = volx.loc['returns']#CHECAR ESSA FUNCAO
+        volx = volx.loc['returns']
         vol_list.append(volx)
 
         covariance[ativo] = base['Price']
@@ -248,9 +245,7 @@ def calc(dados_loc, base, timestamp, diasDaBase, simulacao, atr_max, atr_period,
     bool = False
     bool2 = False
     ativo = base
-    # print(ativo)
 
-    '''INSERIR LEITURA DA BASE DA INTERWEBS'''
     pull = True
     try:
         open(str(dados_loc) + str(base) + '.csv')
@@ -263,12 +258,10 @@ def calc(dados_loc, base, timestamp, diasDaBase, simulacao, atr_max, atr_period,
             pull = GetData.pull(ativo, dados_loc, simulacao)
 
     if not pull:
-        # print('ERRO: NAO FOI POSSIVEL BAIXAR O ARQUIVO')
+        # print('ERRO: NAO FOI POSSIVEL OBTER O ARQUIVO')
         return 'False'
 
     base = readDatabase(str(dados_loc) + str(base) + '.csv')
-
-
 
     index = 0
 
@@ -329,13 +322,15 @@ def calc(dados_loc, base, timestamp, diasDaBase, simulacao, atr_max, atr_period,
 
     base = base.reset_index(drop=True)
     for i in range(4,len(base)):
-        if base['Price'].values[i] == base['Price'].values[i-1]:
-            if base['Price'].values[i] == base['Price'].values[i-2]:
-                if base['Price'].values[i] == base['Price'].values[i-3]:
-                    if base['Price'].values[i] == base['Price'].values[i-4]:
-                        if base['Price'].values[i] == base['Price'].values[i-5]:
-                            # print('BASE COM DADOS INVALIDOS!!!')
-                            return 'False'
+        count=0
+        for a in range(1,6):
+            if base['Price'].values[i] == base['Price'].values[i - a]:
+                count +=1
+            else:
+                break
+        if count == 5:
+            return 'False'
+
     if calcs:
         base = calcRSI(base, 14, 99, 1)  # default 14,70,30// novo = 14,99,1
         base = calcATR(base, atr_period, atr_max) 
@@ -350,7 +345,7 @@ def calc(dados_loc, base, timestamp, diasDaBase, simulacao, atr_max, atr_period,
 
     i = len(base)-1
 
-    #PASSANDO INDICADORES CHAVE
+    #CALCULATES MAIN INDICATORS
     atr = base['atr'].values[i]
     tr = base['tr'].values[i]
     rsi = base['rsi'].values[i]
@@ -359,7 +354,7 @@ def calc(dados_loc, base, timestamp, diasDaBase, simulacao, atr_max, atr_period,
 
     atr_bool = base['atr_bool'].values[i]
 
-    #PASSANDO A LISTA DOS OPERADORES MAIS RECENTES:
+    #OBTAINS RECENT OPER VALUES:
     oper0 = base['oper'].values[i]
     oper1 = base['oper'].values[i-1]
     oper2 = base['oper'].values[i-2]

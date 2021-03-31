@@ -63,7 +63,6 @@ def list(months, initDate):
         date = indic.getDateFormat(date, 2, 1)[0]
         list.append(date)
 
-    # print(list)
     return list
 
 
@@ -98,7 +97,3 @@ def getAtivos(semestre, usar_SMAL11, pop_repeat, local='../BOVA11/', local2='../
             i += 1
 
     return list
-
-
-# pull('BOVA11')
-

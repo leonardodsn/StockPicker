@@ -17,45 +17,23 @@ def melhorCarteira(qtty, type, day, ativos, dados_loc, simulacao, atr_max, atr_p
         list.append(a)
 
     def melhoresBuys(list,qtty):
-        # count_TDM = 0
-        # count_ATR = 0
-        # count_oper = 0
+
         oper_list = []
         best_list = []
 
-        '''TESTES'''
-
-        good_list = []
-        removed_list = []
-
-        '''AAAAAAAA'''
-
         for i in range(0, len(list)):
             opers = list[i][0][0]*1 - (list[i][0][1] * 1 / 8) - (list[i][0][2] * 1 / 4) - (list[i][0][3] * 1 / 2)
-            # 1, 1/8, 1/4, 1/2 (ORIGINAL), 1.5, 1/4, 1/2, 1 (Melhor porem mais Volatil)
-            # if list[i][1][3]: #possivelmente reduntante com o TR/ATR, aprincipio eh a mesm coisa
-            #     continue
-            # elif list[i][0][0] <= 0:
-            #     continue
+
             if list[i][1][2] > 0: #SOMA +9 NO TDM
-                # removed_list.append([opers, list[i][0][0], list[i][3], list[i][2], list[i][1][0]])
-                # count_TDM += 1
                 continue
             elif list[i][1][1]>99: #RSI MAIOR QUE 70 (80 is the best)
-                # removed_list.append([opers, list[i][0][0], list[i][3], list[i][2], list[i][1][0]])
                 continue
             elif list[i][1][0]>atr_max: # TR/ATR > 1.1 (volatilidade)
-                # removed_list.append([opers, list[i][0][0], list[i][3], list[i][2], list[i][1][0]])
-                # count_ATR += 1
                 continue
             elif list[i][0][0]<0: #o oper mais recente nao eh negativo
-                # removed_list.append([opers, list[i][0][0], list[i][3], list[i][2], list[i][1][0]])
-                # count_oper += 1
                 continue
             oper_list.append([opers, list[i][3], list[i][2],list[i][4], list[i][1][4]/list[i][4][0]])  # opers, ativo
-            # good_list.append([opers, list[i][0][0], list[i][3], list[i][2], list[i][1][0]])
 
-        # print(oper_list)
         '''POPS IF UM ATIVO APARECER 2X (PETR3 E PETR4, por exemplo'''
         if pop_repeat:
             ativos_name = []
@@ -72,14 +50,6 @@ def melhorCarteira(qtty, type, day, ativos, dados_loc, simulacao, atr_max, atr_p
         '''---- END OF POP---'''
 
         oper_list = sorted(oper_list, key=itemgetter(0), reverse=True)
-        # good_list = sorted(good_list, key=itemgetter(0), reverse=True)
-        # print(oper_list)
-        # print('count_TDM,'+str(count_TDM))
-        # print('count_ATR,' + str(count_ATR))
-        # print('count_oper,' + str(count_oper))
-
-        # print(good_list)
-        # print(removed_list)
 
         for i in range (0,qtty):
             try:
@@ -114,8 +84,7 @@ def melhorCarteira(qtty, type, day, ativos, dados_loc, simulacao, atr_max, atr_p
             try:
                 best_list.append(oper_list[i])
             except:
-                u=1
-                # print('NUMERO INSUFICIENTE DE ATIVOS QUE ATENDEM AOS REQUISITOS')
+                _ = ""
         return best_list
 
     if type=='Buy':
@@ -125,11 +94,6 @@ def melhorCarteira(qtty, type, day, ativos, dados_loc, simulacao, atr_max, atr_p
     else:
         exit(print('ERRO!'))
 
-    # if len(list) < 2:
-    #     print(list)
-
-
-    # print( 'Best ' +type + ' on day ' + day + ' is ' + str(list))
     return list
 
 def risk(carteiraB,carteiraS):
@@ -170,7 +134,7 @@ def setSemester (ano,mes):
 def Simulation(initDate,months,ativos,qtty, dados_loc, useLong, useShort, CPUs, fileName, usar_SMAL11, simulacao, atr_max, pop_repeat, atr_period, sma_period, diasDaBase=22*6):
 
     if not (useLong or useShort):
-        exit(print('ERRO DE PARÂMETROS, useLong e useShort'))
+        exit(print('PARAMETER ERROR, useLong or useShort'))
 
     date = initDate
     ano = indic.getDateFormat(date, 0, 0)[1]
@@ -179,14 +143,14 @@ def Simulation(initDate,months,ativos,qtty, dados_loc, useLong, useShort, CPUs, 
     bestBuys = []
     bestSells = []
 
-    ''' ----------------- RETORNAR O BEST BUY/SELL NO DIA FINAL DE CADA MES ----------------- '''
+    ''' ----------------- RETURNS BEST BUY/SELL AT THE END OF EACH MONTH ----------------- '''
     for month in range(0,months+1):
 
         if month != 0:
             date = indic.getVarMonthDate(ano,mes,dia,month,False)
             date = indic.getDateFormat(date, 2, 1)[0]
 
-        '''------ RETORNA A LISTA DE ATIVOS POR SEMESTRE DO BOVA11 -----'''
+        '''------ RETURNS LIST OF THE BEST ASSETS PER SEMESTER FROM BOVA11 -----'''
         ano_x = indic.getDateFormat(date, 0, 0)[1]
         mes_x = indic.getDateFormat(date, 0, 0)[2]
 
@@ -197,12 +161,11 @@ def Simulation(initDate,months,ativos,qtty, dados_loc, useLong, useShort, CPUs, 
         bestBuys.append(melhorCarteira(qtty,'Buy',date,ativos,dados_loc, simulacao, atr_max, atr_period, sma_period, pop_repeat))
         bestSells.append(melhorCarteira(qtty,'Sell', date, ativos, dados_loc, simulacao, atr_max, atr_period, sma_period, pop_repeat))
 
-        # print('Progresso = ' +str(int((month+1)/(months+1)*100*100)/100) + '%' + ' in CPU '+str(CPUs))
+        print('Progress = ' +str(int((month+1)/(months+1)*100*100)/100) + '%' + ' in CPU '+str(CPUs))
 
-    # print(bestBuys)
     if not simulacao:
         return bestBuys
-    ''' ----------------- APPENDAR O PRECO DO ATIVO NO PROXIMO MES ----------------- '''
+    ''' ----------------- APPENDS THE ASSET'S PRICE IN THE NEXT MONTH ----------------- '''
     if simulacao:
         for month in range(0,months+1):
             date = initDate
@@ -218,10 +181,8 @@ def Simulation(initDate,months,ativos,qtty, dados_loc, useLong, useShort, CPUs, 
                 ativo = bestBuys[month][a][1]
                 dados = indic.calc(dados_loc, ativo, date, diasDaBase, simulacao, atr_max, atr_period, sma_period, False)
 
-                # CHECAR SE O OUTRO CALC NAO DEU FALSO E DELETAR O REGISTRO CASO ISSO ACONTECA!
                 if dados == 'False':
                     bestBuys[month].pop(a)
-                    # print('DADOS INCOMPLETOS NA SEGUNDA ITERACAO')
                     z -=1
 
                 else:
@@ -236,10 +197,8 @@ def Simulation(initDate,months,ativos,qtty, dados_loc, useLong, useShort, CPUs, 
                 ativo = bestSells[month][a][1]
                 dados = indic.calc(dados_loc, ativo, date, diasDaBase, simulacao, atr_max, atr_period, sma_period, False)
 
-                # CHECAR SE O OUTRO CALC NAO DEU FALSO E DELETAR O REGISTRO CASO ISSO ACONTECA!
                 if dados == 'False':
                     bestSells[month].pop(a)
-                    # print('DADOS INCOMPLETOS NA SEGUNDA ITERACAO')
                     z -=1
 
                 else:
@@ -260,7 +219,6 @@ def Simulation(initDate,months,ativos,qtty, dados_loc, useLong, useShort, CPUs, 
 
         z = len(bestBuys)
         i = 0
-        # for i in range(0,len(bestBuys)):
         while i < z:
             Valid = True
             '''IMPLEMENTAR CHECAGEM DO TAMANHO DO PORTFOLIO'''
@@ -295,15 +253,6 @@ def Simulation(initDate,months,ativos,qtty, dados_loc, useLong, useShort, CPUs, 
                     y = 0
                 elif useLong and useShort:
                     y = risk(bestBuys[i], bestSells[i]) # B * y = S * (1-y)
-
-                '''ORIGINAL CODE QUE FAZ CARTEIRA PROGREDINDO'''
-                # if i == 0:
-                #     pesoBuy = 1 * y
-                #     pesoSell = 1 * (1 - y)
-                # else:
-                #     pesoBuy = results[i-1][0] * y
-                #     pesoSell = results[i-1][0] * (1 - y)
-                '''-------------------------------------------'''
 
                 pesoBuy = 1 * y
                 pesoSell = 1 * (1 -y)

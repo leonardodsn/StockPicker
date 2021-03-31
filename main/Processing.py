@@ -8,7 +8,7 @@ import pandas as pd
 
 begin_time = datetime.datetime.now()
 
-def oneSim(initDate, size_carteira, meses, CPU, fileName, simulacao, dados_loc, simulation_params, useLong = True, useShort = False, ativos = []):
+def simProces(initDate, size_carteira, meses, CPU, fileName, simulacao, dados_loc, simulation_params, useLong = True, useShort = False, ativos = []):
     atr_max = simulation_params[0]
     usar_SMAL11 = simulation_params[1]
     pop_repeat = simulation_params[2]
@@ -17,10 +17,9 @@ def oneSim(initDate, size_carteira, meses, CPU, fileName, simulacao, dados_loc, 
     S = si.Simulation(initDate, meses, ativos, size_carteira, dados_loc, useLong, useShort, CPU, fileName, usar_SMAL11, simulacao, atr_max, pop_repeat, atr_period, sma_period, 22 * 6)
     return S
 
-def run(size_carteira, months, initDate, fileName, threads, simulacao, dados_loc, simulation_params):
+def allocateThreads(size_carteira, months, initDate, fileName, threads, simulacao, dados_loc, simulation_params):
     global processes
     processes = []
-    # CPUs = os.cpu_count() - 8
     CPUs = threads
     daysList = GetData.list(months, initDate)
     init_count_per_cpu = int(months/CPUs)
@@ -48,7 +47,7 @@ def run(size_carteira, months, initDate, fileName, threads, simulacao, dados_loc
     '''IMPLEMENTAR SEPARACAO DOS MESES POR CORE DA CPU  '''
     current = 0
     for CPU in range(CPUs): #11 CPUS, 0-10
-        # print('registering processes %d' % CPU)
+        print('registering processes %d' % CPU)
         #initDate, size_carteira, meses
 
         for i in range(0,CPU): #NA CPU 0, NAO RODA O FOR!
@@ -56,7 +55,7 @@ def run(size_carteira, months, initDate, fileName, threads, simulacao, dados_loc
         initDate = daysList[current]
         month_int = count_per_cpu[CPU]
 
-        processes.append(Process(target=oneSim, args=(initDate, size_carteira, month_int, CPU, fileName, simulacao, dados_loc, simulation_params)))
+        processes.append(Process(target=simProces, args=(initDate, size_carteira, month_int, CPU, fileName, simulacao, dados_loc, simulation_params)))
         current = 0
 
     for process in processes:
@@ -64,7 +63,6 @@ def run(size_carteira, months, initDate, fileName, threads, simulacao, dados_loc
 
     for process in processes:
         process.join()
-        # process.terminate()
 
     return ''
 
@@ -105,13 +103,13 @@ def sortLog (fileName):
 
     return
 
-def runner(initDate,months,size_carteira,dados_loc, threads, simulacao, simulation_params):
+def start(initDate,months,size_carteira,dados_loc, threads, simulacao, simulation_params):
     if simulacao:
         fileName = createLog(initDate, months, size_carteira)
     else:
         fileName = 'NAN'
         dados_loc = '../strategyData/'
-    run(size_carteira,months,initDate, fileName, threads, simulacao, dados_loc, simulation_params)
+    allocateThreads(size_carteira,months,initDate, fileName, threads, simulacao, dados_loc, simulation_params)
 
     '''END CODE - READ TXT AND MAKE CALCULATIONS'''
 
@@ -145,7 +143,7 @@ def runner(initDate,months,size_carteira,dados_loc, threads, simulacao, simulati
     for process in processes:
         process.terminate()
 
-''' ------------- RUN MAIN CODE AND WRITE FILE ----------------'''
+''' ------------- RU N MAIN CODE AND WRITE FILE ----------------'''
 
 dados_loc = '../histData/'
 size_carteira = 10
@@ -161,4 +159,4 @@ initDate = 'Dec 31, 2009'
 
 simulation_params = [atr_max,usar_SMAL11,pop_repeat,atr_period, sma_period]
 
-runner(initDate,months,size_carteira,dados_loc, threads, simulacao, simulation_params)
+start(initDate,months,size_carteira,dados_loc, threads, simulacao, simulation_params)
